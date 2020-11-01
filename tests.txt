@@ -1,0 +1,29 @@
+
+function getChoicesTest(){
+  var sheet = SpreadsheetApp.getActiveSheet();
+  var data = sheet.getDataRange().getValues();
+  var elections = getElections(data);
+  elections.forEach(election => {
+    Logger.log(election.election);
+    election.choices.forEach(choice => {
+      Logger.log(choice);
+    })
+   })
+}
+
+function testVoterChoices(){
+  var sheet = SpreadsheetApp.getActiveSheet();
+  var data = sheet.getDataRange().getValues();
+  var elections = processData(data);
+  elections.forEach(election => {
+    Logger.log("election" + election.election);
+    Logger.log("winners" + election.winners);
+    Logger.log(election.voterChoices);
+    election.voterChoices.forEach(voter => {
+      Logger.log("-----------------------");
+      voter.forEach(vote => {
+        Logger.log(vote);
+      })
+    })
+  })
+}

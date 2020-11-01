@@ -1,0 +1,153 @@
+//takes as param: 
+//things to kno: array of voters with their array of choices
+// 1)who's alive/eleminated 2)amount of winners
+//iplicit calculations: voting threshold. Redistribution of votes
+//helper func: distribute votes over array of candidates (array of candidates with array of voters that gave the vote)
+
+//dataType: distributedVotes = [{choice name, isCurrentlyValid, [voters]}](of choices) //valid means NOT winner and NOT eliminated
+function calcWinners(election){ //[election e, choices: [c], numWinners: w, voterChoices: [[vc]], winners: [] ]
+    const vc = removeNonVoters(election.voterChoices);
+    var numChoices = election.choices.length;
+    
+    var distributedVotes = distributeVotes(vc, numChoices);
+    var votingThreshHold = Math.floor(vc.length/election.numWinners);
+    var sortedDistribution = distributedVotes.sort(function(a, b){return a.voters.length - b.voters.length});
+    var numSeatsOpen = election.numWinners;
+    var numCandidates = election.choices.length;
+    var activeCandidates = [];
+    for (i = 0; i < numCandidates; i++){
+      activeCandidates.push(1);
+    }
+    Logger.log(election.winners);
+    Logger.log(numSeatsOpen);
+    Logger.log(numCandidates);
+    Logger.log(votingThreshHold);
+    Logger.log("start loop");
+    while(numSeatsOpen < numCandidates && numSeatsOpen != 0){ //check if done
+      Logger.log("---");
+      Logger.log(numSeatsOpen);
+      Logger.log(numCandidates);
+      Logger.log("---");
+      if (sortedDistribution[sortedDistribution.length - 1].voters.length >= votingThreshHold){ //award winner
+        Logger.log(distributedVotes);
+        const winner = getWinner(sortedDistribution, activeCandidates);
+        Logger.log("win");
+        Logger.log(winner.c);
+        election.winners.push(election.choices[winner.c]);
+        activeCandidates[winner.c] = 0;
+        distributedVotes = redestribute(winner.voters, distributedVotes, activeCandidates, votingThreshHold);
+        sortedDistribution = getSortedDistribution(distributedVotes, activeCandidates);
+        numSeatsOpen--;
+        numCandidates--;
+      }
+      else {  //otherwise eliminate loser
+        const loser = getLoser(sortedDistribution, activeCandidates);
+        Logger.log("LOSER");
+        Logger.log(loser.c);
+        activeCandidates[loser.c] = 0;
+        distributedVotes = redestributeAll(loser.voters, distributedVotes, activeCandidates);
+        sortedDistribution = getSortedDistribution(distributedVotes, activeCandidates);
+        numCandidates--;
+      }
+      Logger.log("ACTIVES");
+      Logger.log(activeCandidates);
+    }  
+    Logger.log("loop done");
+    Logger.log(numSeatsOpen);
+    Logger.log(numCandidates);
+    if (numSeatsOpen != 0){
+      for (i = 0; i < activeCandidates.length; i++){
+        if (activeCandidates[i] == 1) election.winners.push(election.choices[i]);
+      }
+    }
+    Logger.log("returning!!!!!!!");
+    Logger.log(election);
+    return election.winners;
+}
+
+function getWinner(SD, actives){
+  for (i = SD.length - 1; i >= 0; i--){
+    if (actives[SD[i].c] == 1) return SD[i];
+  }
+  Logger.log("VERY BAD");
+}
+
+function getLoser(SD, actives){
+  for (i = 0; i < SD.length; i++){
+    if (actives[SD[i].c] == 1) return SD[i];
+  }
+  Logger.log("VERY BAD");
+}
+
+function getSortedDistribution(DV, actives){
+  var destributedVotes = [];
+  for (i = 0; i < actives.length; i++){
+    if (actives[i] == 1) destributedVotes.push(DV[i]);
+  }
+  var sortedDistribution = destributedVotes.sort(function(a, b){return a.voters.length - b.voters.length});
+  return sortedDistribution;
+}
+
+function redestribute(voters, DV, actives, vth){
+  const numRedes = voters.length - vth;
+  var DVload = [];
+  for (i = 0; i < DV.length; i++){
+    DVload.push([]);
+  }
+  for (i = 0; i < voters.length; i++){
+    var validVoter = getNextVote(voters[i], actives);
+    if (validVoter[0] != -1) DVload[validVoter[0] - 1].push(validVoter);
+  }
+  for (i = 0; i < DV.length; i++){
+    Logger.log(Math.floor((DVload[i].length/voters.length)*numRedes));
+    for (k = 0; k < Math.floor((DVload[i].length/voters.length)*numRedes); k++){
+      DV[i].voters.push(DVload[i].pop());
+    }
+  }
+  return DV;
+}
+
+
+
+function redestributeAll(voters, DV, actives){
+  for (i = 0; i < voters.length; i++){
+    var validVoter = getNextVote(voters[i], actives);
+    if (validVoter[0] != -1) DV[validVoter[0]].voters.push(validVoter);
+  }
+  return DV;
+}
+
+function getNextVote(voter, actives){
+  while(voter.length){
+    if (actives[voter[0]] == 1) return voter;
+    else voter.shift();
+  }
+  return [-1];
+}
+
+function distributeVotes(voterChoices, numChoices){
+  var distributedVotes = [];
+  voterChoices = removeNonVoters(voterChoices);
+  for (i = 0; i < numChoices; i++){
+    distributedVotes.push({c: i, voters: []});
+  }
+  for (i = 0; i < voterChoices.length; i ++){
+    distributedVotes[voterChoices[i][0]].voters.push(voterChoices[i]);
+  }
+  return distributedVotes;
+}
+
+function removeNonVoters(arrVoters){
+  var voters = [];
+  arrVoters.forEach(voter => {
+    if (voter.length) voters.push(voter);
+  })
+  return voters;
+}
+
+function removeFirstChoices(arrVoters){
+  arrVoters = removeNonVoters(arrVoters);
+  for (i = 0; i < arrVoters.length; i++){
+    arrVoters[i].shift();
+  }
+}

@@ -1,0 +1,67 @@
+function processData(data){
+  var elections = getElections(data);
+  var choiceStartIndex = 1;
+  elections.forEach(election => {
+    election.numWinners = askUserForNumber("Number of winners for " + election.election + ":");
+  })
+  elections.forEach(election => {
+    election.voterChoices = getVoterData(election, data, choiceStartIndex);
+    choiceStartIndex += election.choices.length;
+  })
+  return elections;
+}
+//GOAL: [election e, choices: [c], numWinners: w, voterChoices: [[vc]], winners: [] ]
+//SUBGOAL dataType: voterChoices = [[4, 2, 3, 1]] where num corresponds to choice, and index to priority.
+
+function getVoterData(election, data, choiceStartIndex){
+  var voterData = [];
+  for (i = 1; i < data.length; i++){
+    voterData.push([]);
+    for (c = choiceStartIndex; c < election.choices.length + choiceStartIndex; c++){
+      voterData[i - 1].push(parseInt(data[i][c]));
+    }
+  }
+  return getVoterChoices(voterData)
+}
+
+function getVoterChoices(voterData){
+  const len = voterData[0].length;
+  var voterChoices = [];
+  for (voter = 0; voter < voterData.length; voter++){
+    voterChoices.push([]);
+    for (i = 0; i < len; i++){
+      const vote = voterData[voter][i];
+      if (!isNaN(vote)) voterChoices[voter][vote - 1] = i;
+    }
+  }
+  return voterChoices;
+}
+
+function getElections(data){  //fills out election and choices. winners and voterChoices defaulted.
+  var i = 1;
+  var elections = [] //{election: e, choices: [], winners: 1, voterChoices, winners}
+  var lastElection = "";
+  var electionIndex = -1;
+  while(data[0][i] != null){
+    var thisElection = data[0][i].split("[");
+    if (lastElection[0] != thisElection[0]) {
+      electionIndex++;
+      elections[electionIndex] = {election: thisElection[0], choices: [], numWinners: 1, voterChoices: [], winners: []}
+    }
+    elections[electionIndex].choices.push(thisElection[1].slice(0, thisElection[1].length - 1));
+    
+    lastElection = thisElection;
+    i++;
+  }
+  
+  return elections;
+}
+
+function askUserForNumber(text) {
+  var ui = SpreadsheetApp.getUi();
+  var response = parseInt(ui.prompt(text).getResponseText());
+  while (isNaN(response)){
+    response = parseInt(ui.prompt("invalid number!  " + text).getResponseText());
+  }
+  return response;
+}
