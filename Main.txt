@@ -4,17 +4,8 @@ function main() {
   var elections = processData(data);
   var text;
   var winningPeople = [];
-  Logger.log(elections);
-  Logger.log(elections[1]);
-  Logger.log(elections.length);
   elections.forEach(election => {
-   Logger.log("----------------------------------------------------------");
-    Logger.log(election);
-    Logger.log("----------------------------------------------------------");
     winningPeople.push(calcWinners(election));
-    Logger.log("----------------------------------------------------------");
-    Logger.log(winningPeople);
-    Logger.log("----------------------------------------------------------");
   })
   var ui = SpreadsheetApp.getUi();
   for (i = 0; i < elections.length; i++){
@@ -22,7 +13,6 @@ function main() {
     for (w = 0; w < winningPeople[i].length; w++){
       winners = winners + winningPeople[i][w];
       winners += ", ";
-      Logger.log(winners);
     }
     ui.alert("winners for " + elections[i].election + " are: " + winners);
   }
