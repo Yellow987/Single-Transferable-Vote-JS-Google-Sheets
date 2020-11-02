@@ -1,16 +1,9 @@
-//takes as param: 
-//things to kno: array of voters with their array of choices
-// 1)who's alive/eleminated 2)amount of winners
-//iplicit calculations: voting threshold. Redistribution of votes
-//helper func: distribute votes over array of candidates (array of candidates with array of voters that gave the vote)
-
-//dataType: distributedVotes = [{choice name, isCurrentlyValid, [voters]}](of choices) //valid means NOT winner and NOT eliminated
 function calcWinners(election){ //[election e, choices: [c], numWinners: w, voterChoices: [[vc]], winners: [] ]
     const vc = removeNonVoters(election.voterChoices);
     var numChoices = election.choices.length;
     
     var distributedVotes = distributeVotes(vc, numChoices);
-    var votingThreshHold = Math.floor(vc.length/election.numWinners);
+    var votingThreshHold = Math.floor(vc.length/(election.numWinners + 1)) + 1;
     var sortedDistribution = distributedVotes.sort(function(a, b){return a.voters.length - b.voters.length});
     var numSeatsOpen = election.numWinners;
     var numCandidates = election.choices.length;
@@ -18,16 +11,7 @@ function calcWinners(election){ //[election e, choices: [c], numWinners: w, vote
     for (i = 0; i < numCandidates; i++){
       activeCandidates.push(1);
     }
-    Logger.log(election.winners);
-    Logger.log(numSeatsOpen);
-    Logger.log(numCandidates);
-    Logger.log(votingThreshHold);
-    Logger.log("start loop");
     while(numSeatsOpen < numCandidates && numSeatsOpen != 0){ //check if done
-      Logger.log("---");
-      Logger.log(numSeatsOpen);
-      Logger.log(numCandidates);
-      Logger.log("---");
       if (sortedDistribution[sortedDistribution.length - 1].voters.length >= votingThreshHold){ //award winner
         Logger.log(distributedVotes);
         const winner = getWinner(sortedDistribution, activeCandidates);
@@ -49,19 +33,12 @@ function calcWinners(election){ //[election e, choices: [c], numWinners: w, vote
         sortedDistribution = getSortedDistribution(distributedVotes, activeCandidates);
         numCandidates--;
       }
-      Logger.log("ACTIVES");
-      Logger.log(activeCandidates);
     }  
-    Logger.log("loop done");
-    Logger.log(numSeatsOpen);
-    Logger.log(numCandidates);
     if (numSeatsOpen != 0){
       for (i = 0; i < activeCandidates.length; i++){
         if (activeCandidates[i] == 1) election.winners.push(election.choices[i]);
       }
     }
-    Logger.log("returning!!!!!!!");
-    Logger.log(election);
     return election.winners;
 }
 
@@ -112,7 +89,7 @@ function redestribute(voters, DV, actives, vth){
 function redestributeAll(voters, DV, actives){
   for (i = 0; i < voters.length; i++){
     var validVoter = getNextVote(voters[i], actives);
-    if (validVoter[0] != -1) DV[validVoter[0]].voters.push(validVoter);
+    if (validVoter[0] != -1) DV[validVoter[0] - 1].voters.push(validVoter);
   }
   return DV;
 }
