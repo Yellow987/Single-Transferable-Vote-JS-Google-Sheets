@@ -29,4 +29,4 @@ You may have multiple elections in one form, however each election must be a "Mu
 
 ## Notes
 Due to the limitations of the Google Script platform, large ballots (tested at 1000+) may cause the election to fail due to "running out of memory". 
-A workaround is currently underdevelopment, and aims to use the downloadable .csv format to calculate the winners of the STV election on locally executing JS.
+A workaround is currently underdevelopment, and aims to use the downloadable .csv format to calculate the winners of the STV election on locally executing JS. Will be delivered in time for the 2021 Student council elections!
